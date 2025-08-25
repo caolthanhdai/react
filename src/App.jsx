@@ -1,65 +1,45 @@
-import React from "react";
+import { useEffect, useState } from "react";
 
-const ToDoApp = () => {
-  const [no, setNo] = React.useState(0);
-  const [task, setTask] = React.useState("");
-  const [taskList, setTaskList] = React.useState([]);
+function App() {
+  const [users, setUsers] = useState([]);    // lưu danh sách users
+  const [loading, setLoading] = useState(true); // trạng thái loading
+  const [error, setError] = useState(null);     // lỗi (nếu có)
 
-  const handleAddTask = () => {
-    const clean = task.trim();
-    if (!clean) return;
-    setTaskList(prev => [
-      ...prev,
-      { id: Date.now(), no: Number(no), task: clean, done: false }
-    ]);
-    setNo(0);
-    setTask("");
-  };
+  useEffect(() => {
+    // gọi API khi component mount
+    fetch("https://jsonplaceholder.typicode.com/users")
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Lỗi khi fetch API");
+        }
+        return res.json();
+      })
+      .then((data) => {
+        setUsers(data);       // cập nhật state với dữ liệu từ API
+        setLoading(false);
+      })
+      .catch((err) => {
+        setError(err.message);
+        setLoading(false);
+      });
+  }, []); // [] để chỉ chạy 1 lần sau render đầu tiên
 
-  const handleToggleDone = (id) => {
-    setTaskList(prev =>
-      prev.map(item => item.id === id ? { ...item, done: !item.done } : item)
-    );
-  };
+  if (loading) return <p>Đang tải...</p>;
+  if (error) return <p>Lỗi: {error}</p>;
 
   return (
     <div>
-      <h1>To-Do List</h1>
-
-      <div>
-        <input
-          type="number"
-          placeholder="Task Number"
-          value={no}
-          onChange={e => setNo(e.target.value)}
-        />
-        <input
-          type="text"
-          placeholder="Task Description"
-          value={task}
-          onChange={e => setTask(e.target.value)}
-        />
-        <button onClick={handleAddTask} disabled={!task.trim()}>
-          Add Task
-        </button>
-      </div>
-
+      <h1>Danh sách Ugit sers</h1>
       <ul>
-        {taskList.map(item => (
-          <li key={item.id}>
-            <input
-              type="checkbox"
-              checked={item.done}
-              onChange={() => handleToggleDone(item.id)}
-            />
-            <span style={{ textDecoration: item.done ? "line-through" : "none" }}>
-              {item.no}: {item.task}
-            </span>
+        {users.map((user) => (
+          <li key={user.id}>
+            <strong>{user.name}</strong> ({user.email})
           </li>
         ))}
       </ul>
     </div>
   );
-};
+}
 
-export default ToDoApp;
+export default App;
+
